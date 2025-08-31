@@ -2,6 +2,7 @@ package com.brodep.cloudstoragepetproject.repository;
 
 import com.brodep.cloudstoragepetproject.dto.response.ResourceInfoResponse;
 import io.minio.*;
+import io.minio.messages.Item;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -9,13 +10,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
 @Service
 @Slf4j
 public class MinioS3Repository implements S3Repository{
-    
+
     private MinioClient minioClient;
 
     @Value("${s3.host}")
@@ -108,9 +110,32 @@ public class MinioS3Repository implements S3Repository{
         return Set.of();
     }
 
+    @SneakyThrows
     @Override
     public Set<ResourceInfoResponse> getDirectoryResources(String path) {
-        return Set.of();
+        var objects = minioClient.listObjects(
+                ListObjectsArgs.builder()
+                        .bucket(bucketName)
+                        .recursive(true)
+                        .build());
+        Set<ResourceInfoResponse> response = new HashSet<>();
+        for (Result<Item> itemResult : objects) {
+            var curObject = itemResult.get();
+            if (!curObject.isDir()) {
+                try {
+                    var stream = minioClient.getObject(
+                            GetObjectArgs.builder()
+                                    .bucket(bucketName)
+                                    .object(path + curObject.objectName())
+                                    .build());
+                    response.add(objectToResourceInfoResponse(stream));
+                }
+                catch (Exception e){
+                    log.warn("Обьект {} не принадлежит папке", curObject.objectName());
+                }
+            }
+        }
+        return response;
     }
 
     @Override

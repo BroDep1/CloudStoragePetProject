@@ -38,4 +38,8 @@ public class ResourceService {
         s3Repository.upload(getUserPath(path), file);
         return null;
     }
+
+    public Set<ResourceInfoResponse> getDirectoryResources(String path) {
+        return s3Repository.getDirectoryResources(getUserPath(path));
+    }
 }

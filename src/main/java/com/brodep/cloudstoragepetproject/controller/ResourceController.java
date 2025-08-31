@@ -60,15 +60,15 @@ public class ResourceController {
     @Operation(summary = "Аплоад ресурсов")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Set<ResourceInfoResponse> uploadResources(@RequestParam String path, @RequestParam("object") MultipartFile file) {
+    public Set<ResourceInfoResponse> uploadResources(@RequestParam(required = false) String path, @RequestParam("object") MultipartFile file) {
         return resourceService.uploadResources(path, file);
     }
 
     @Operation(summary = "Получение информации о содержимом папки")
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("directory")
-    public Set<ResourceInfoResponse> getDirectoryResources(@RequestParam String path) {
-        return null;
+    public Set<ResourceInfoResponse> getDirectoryResources(@RequestParam(required = false) String path) {
+        return resourceService.getDirectoryResources(path);
     }
 
     @Operation(summary = "Создание пустой папки")
