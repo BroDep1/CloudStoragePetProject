@@ -122,16 +122,13 @@ public class MinioS3Repository implements S3Repository{
         for (Result<Item> itemResult : objects) {
             var curObject = itemResult.get();
             if (!curObject.isDir()) {
-                try {
+                if (curObject.objectName().startsWith(path)) {
                     var stream = minioClient.getObject(
                             GetObjectArgs.builder()
                                     .bucket(bucketName)
-                                    .object(path + curObject.objectName())
+                                    .object(curObject.objectName())
                                     .build());
                     response.add(objectToResourceInfoResponse(stream));
-                }
-                catch (Exception e){
-                    log.warn("Обьект {} не принадлежит папке", curObject.objectName());
                 }
             }
         }
