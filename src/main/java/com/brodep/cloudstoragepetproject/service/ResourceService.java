@@ -19,6 +19,9 @@ public class ResourceService {
 
     private String getUserPath(String path){
         var userId = userService.getCurrentUser().getId().toString();
+        if (path == null) {
+            return "user-" + userId + "-files/";
+        }
         return "user-" + userId + "-files/" + path;
     }
 
