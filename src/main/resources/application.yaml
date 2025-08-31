@@ -25,6 +25,3 @@ s3:
   credentials:
     username: user
     password: user123456
-  path-to-storage-file: files/minio-file
-  storage-file-name: minio-file
-  path-to-dir-of-storage-file: files

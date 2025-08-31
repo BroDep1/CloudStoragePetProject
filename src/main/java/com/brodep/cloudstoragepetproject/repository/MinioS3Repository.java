@@ -9,13 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.InputStream;
-import java.nio.file.FileStore;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 
@@ -33,12 +26,6 @@ public class MinioS3Repository implements S3Repository{
     private String username;
     @Value("${s3.credentials.password}")
     private String password;
-    @Value("${s3.path-to-storage-file}")
-    private String pathToStorageFile;
-    @Value("${s3.storage-file-name}")
-    private String storageFileName;
-    @Value("${s3.path-to-dir-of-storage-file}")
-    private String pathToDirOfStorageFile;
 
     @PostConstruct
     public void init() {
@@ -60,17 +47,14 @@ public class MinioS3Repository implements S3Repository{
     @SneakyThrows
     @Override
     public void upload(String path, MultipartFile file) {
-        if (!Files.exists(Path.of(pathToDirOfStorageFile))) {
-            Files.createDirectory(Path.of(pathToDirOfStorageFile));
-            Files.createFile(Path.of(pathToStorageFile));
-        }
-        file.transferTo(Path.of(pathToStorageFile));
-        minioClient.uploadObject(
-                        UploadObjectArgs.builder()
+        minioClient.putObject(
+                PutObjectArgs.builder()
                         .bucket(bucketName)
                         .object(path + file.getOriginalFilename())
-                        .filename(pathToStorageFile)
-                        .build());
+                        .stream(file.getInputStream(), file.getSize(), -1)
+                        .contentType(file.getContentType())
+                        .build()
+        );
     }
 
     @SneakyThrows
