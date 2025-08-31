@@ -8,8 +8,6 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    networks:
-      - app-net
   backend:
     container_name: backend
     image: abrodep/cloud-storage-backend:latest
@@ -25,16 +23,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
       SPRING_REDIS_HOST: redis
       SPRING_MINIO_HOST: http://minio:9000
-    networks:
-      - app-net
   redis:
     container_name: redis
     image: redis:alpine
     restart: unless-stopped
     ports:
       - "6379:6379"
-    networks:
-      - app-net
   minio:
     container_name: minio
     image: quay.io/minio/minio
@@ -46,18 +40,11 @@ services:
     environment:
         MINIO_ROOT_USER: user
         MINIO_ROOT_PASSWORD: user123456
-    networks:
-      - app-net
   frontend:
     container_name: frontend
     build: frontend/cloud-storage-frontend/.
     ports:
-      - '80:80'
+    - '80:80'
     restart: unless-stopped
-    networks:
-      - app-net
 
-networks:
-  app-net:
-    driver: bridge
 

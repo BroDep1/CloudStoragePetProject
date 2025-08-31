@@ -36,7 +36,6 @@ public class SecurityConfig {
                     var corsConfiguration = new CorsConfiguration();
                     corsConfiguration.setAllowedOrigins(List.of(
                             "http://localhost:80",
-                            "http://localhost:8200",
                             "http://frontend:80"
                             )
                     );
