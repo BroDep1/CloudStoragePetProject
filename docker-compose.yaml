@@ -12,7 +12,8 @@ services:
       - app-net
   backend:
     container_name: backend
-    image: cloud-storage-backend:latest
+    image: abrodep/cloud-storage-backend:latest
+    pull_policy: always
     ports:
       - '8080:8080'
     depends_on:
