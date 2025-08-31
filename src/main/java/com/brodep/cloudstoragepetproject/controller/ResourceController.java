@@ -60,7 +60,7 @@ public class ResourceController {
     @Operation(summary = "Аплоад ресурсов")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Set<ResourceInfoResponse> uploadResources(@RequestParam String path, @RequestParam("file") MultipartFile file) {
+    public Set<ResourceInfoResponse> uploadResources(@RequestParam String path, @RequestBody MultipartFile file) {
         return resourceService.uploadResources(path, file);
     }
 
