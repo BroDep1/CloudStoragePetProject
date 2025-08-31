@@ -1,0 +1,30 @@
+spring:
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: 6379
+  session:
+    timeout: 30m
+    redis:
+      repository-type: indexed
+      namespace: spring:session
+s3:
+  host: ${SPRING_MINIO_HOST:http://127.0.0.1:9000}
+  bucket-name: user-files
+  credentials:
+    username: user
+    password: user123456
+  path-to-storage-file: files/minio-file
+  storage-file-name: minio-file
+  path-to-dir-of-storage-file: files

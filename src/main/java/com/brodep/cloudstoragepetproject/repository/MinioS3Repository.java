@@ -1,0 +1,149 @@
+package com.brodep.cloudstoragepetproject.repository;
+
+import com.brodep.cloudstoragepetproject.dto.response.ResourceInfoResponse;
+import io.minio.*;
+import jakarta.annotation.PostConstruct;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.InputStream;
+import java.nio.file.FileStore;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.Set;
+
+@Service
+@Slf4j
+public class MinioS3Repository implements S3Repository{
+    
+    private MinioClient minioClient;
+
+    @Value("${s3.host}")
+    private String host;
+    @Value("${s3.bucket-name}")
+    private String bucketName;
+    @Value("${s3.credentials.username}")
+    private String username;
+    @Value("${s3.credentials.password}")
+    private String password;
+    @Value("${s3.path-to-storage-file}")
+    private String pathToStorageFile;
+    @Value("${s3.storage-file-name}")
+    private String storageFileName;
+    @Value("${s3.path-to-dir-of-storage-file}")
+    private String pathToDirOfStorageFile;
+
+    @PostConstruct
+    public void init() {
+        minioClient = MinioClient.builder()
+                .endpoint(host)
+                .credentials(username, password)
+                .build();
+        try {
+            var bucketExists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+            if (!bucketExists) {
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+            }
+        }
+        catch (Exception e) {
+            log.error("Error creation Bucket");
+        }
+    }
+
+    @SneakyThrows
+    @Override
+    public void upload(String path, MultipartFile file) {
+        if (!Files.exists(Path.of(pathToDirOfStorageFile))) {
+            Files.createDirectory(Path.of(pathToDirOfStorageFile));
+            Files.createFile(Path.of(pathToStorageFile));
+        }
+        file.transferTo(Path.of(pathToStorageFile));
+        minioClient.uploadObject(
+                        UploadObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(path + file.getOriginalFilename())
+                        .filename(pathToStorageFile)
+                        .build());
+    }
+
+    @SneakyThrows
+    @Override
+    public void delete(String path) {
+        minioClient.removeObject(
+                RemoveObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(path)
+                        .build()
+        );
+    }
+
+    @SneakyThrows
+    @Override
+    public byte[] download(String path) {
+        var stream = minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(path)
+                        .build());
+        return stream.readAllBytes();
+    }
+
+    @SneakyThrows
+    @Override
+    public ResourceInfoResponse getInfo(String path) {
+        if (path.endsWith("/")) {
+            return new ResourceInfoResponse(
+                    path,
+                    path,
+                    Optional.empty(),
+                    ResourceInfoResponse.ResourceType.DIRECTORY
+            );
+        }
+        var stream = minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(path)
+                        .build());
+        return objectToResourceInfoResponse(stream);
+    }
+
+    @Override
+    public void move(String from, String to) {
+
+    }
+
+    @Override
+    public Set<ResourceInfoResponse> search(String query) {
+        return Set.of();
+    }
+
+    @Override
+    public Set<ResourceInfoResponse> getDirectoryResources(String path) {
+        return Set.of();
+    }
+
+    @Override
+    public void createDirectory() {
+
+    }
+
+    private ResourceInfoResponse objectToResourceInfoResponse(GetObjectResponse stream){
+        var splitedPath = stream.object().split("/");
+        var fileName = splitedPath[splitedPath.length-1];
+        var strBuilder = new StringBuilder(stream.object());
+        var path = strBuilder.delete(strBuilder.lastIndexOf(fileName), stream.object().length()).toString();
+        return new ResourceInfoResponse(
+                path,
+                fileName,
+                Optional.of(stream.headers().size()),
+                ResourceInfoResponse.ResourceType.FILE
+        );
+    }
+}
