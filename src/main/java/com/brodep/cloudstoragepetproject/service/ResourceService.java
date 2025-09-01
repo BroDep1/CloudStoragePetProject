@@ -43,6 +43,6 @@ public class ResourceService {
     }
 
     public Set<ResourceInfoResponse> getDirectoryResources(String path) {
-        return s3Repository.getDirectoryResources(getUserPath(path));
+        return s3Repository.getDirectoryResources(path);
     }
 }
