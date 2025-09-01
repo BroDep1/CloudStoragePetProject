@@ -34,7 +34,7 @@ public class ResourceService {
     }
 
     public byte[] downloadResource(String path) {
-        return s3Repository.download(getUserPath(path));
+        return s3Repository.download(path);
     }
 
     public Set<ResourceInfoResponse> uploadResources(String path, MultipartFile file) {
