@@ -30,7 +30,7 @@ public class ResourceService {
     }
 
     public void deleteResource(String path) {
-        s3Repository.delete(getUserPath(path));
+        s3Repository.delete(path);
     }
 
     public byte[] downloadResource(String path) {
