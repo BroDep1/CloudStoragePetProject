@@ -43,19 +43,19 @@ public class ResourceController {
         return resourceService.downloadResource(path);
     }
 
-    @Operation(summary = "Переименование/перемещение ресурса")
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping("resource/move")
-    public ResourceInfoResponse moveResource(@RequestParam String from, @RequestParam String to) {
-        return null;
-    }
+//    @Operation(summary = "Переименование/перемещение ресурса")
+//    @ResponseStatus(HttpStatus.OK)
+//    @GetMapping("resource/move")
+//    public ResourceInfoResponse moveResource(@RequestParam String from, @RequestParam String to) {
+//        return null;
+//    }
 
-    @Operation(summary = "Поиск ресурсов")
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping("resource/search")
-    public Set<ResourceInfoResponse> searchResources(@RequestParam String query) {
-        return null;
-    }
+//    @Operation(summary = "Поиск ресурсов")
+//    @ResponseStatus(HttpStatus.OK)
+//    @GetMapping("resource/search")
+//    public Set<ResourceInfoResponse> searchResources(@RequestParam String query) {
+//        return null;
+//    }
 
 
     @Operation(summary = "Аплоад ресурсов")
@@ -72,11 +72,11 @@ public class ResourceController {
         return resourceService.getDirectoryResources(path);
     }
 
-    @Operation(summary = "Создание пустой папки")
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("resource/directory")
-    public Set<ResourceInfoResponse> createDirectory(@RequestParam String path) {
-        return null;
-    }
+//    @Operation(summary = "Создание пустой папки")
+//    @ResponseStatus(HttpStatus.CREATED)
+//    @PostMapping("resource/directory")
+//    public Set<ResourceInfoResponse> createDirectory(@RequestParam String path) {
+//        return null;
+//    }
 
 }

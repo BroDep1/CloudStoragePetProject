@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 
 @Service
 @Slf4j
-public class MinioS3Repository implements S3Repository{
+public class MinioS3Repository implements S3Repository {
 
     private MinioClient minioClient;
 
@@ -40,8 +40,7 @@ public class MinioS3Repository implements S3Repository{
                     .endpoint(host)
                     .credentials(username, password)
                     .build();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error connecting to minio");
         }
         try {
@@ -49,8 +48,7 @@ public class MinioS3Repository implements S3Repository{
             if (!bucketExists) {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error creation Bucket {}", bucketName);
         }
     }
@@ -61,7 +59,6 @@ public class MinioS3Repository implements S3Repository{
         try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
             for (MultipartFile file : files) {
                 executorService.submit(() -> {
-                    log.info("Создание потока для загрузки файла {}", file.getOriginalFilename());
                     try {
                         minioClient.putObject(
                                 PutObjectArgs.builder()
@@ -74,11 +71,10 @@ public class MinioS3Repository implements S3Repository{
                         var stream = minioClient.getObject(
                                 GetObjectArgs.builder()
                                         .bucket(bucketName)
-                                        .object(path)
+                                        .object(path + file.getOriginalFilename())
                                         .build());
                         response.add(objectToResourceInfoResponse(stream));
-                    }
-                    catch (Exception e){
+                    } catch (Exception e) {
                         log.error("Error uploading file {}", file.getOriginalFilename());
                         throw new AlreadyExistsException("Файл с именем %s уже существует".formatted(file.getName()));
                     }
@@ -91,14 +87,13 @@ public class MinioS3Repository implements S3Repository{
     @Override
     public void delete(String path) {
         try {
-        minioClient.removeObject(
-                RemoveObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(path)
-                        .build()
-        );
-        }
-        catch (Exception e) {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(path)
+                            .build()
+            );
+        } catch (Exception e) {
             log.error("Error deleting file with path {}", path);
             throw new RuntimeException();
         }
@@ -113,8 +108,7 @@ public class MinioS3Repository implements S3Repository{
                             .object(path)
                             .build());
             return stream.readAllBytes();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             log.error("Error downloading file with path {}", path);
             throw new RuntimeException();
         }
@@ -137,8 +131,7 @@ public class MinioS3Repository implements S3Repository{
                             .object(path)
                             .build());
             return objectToResourceInfoResponse(stream);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             log.error("Error getting info of file with path {}", path);
             throw new RuntimeException();
         }
@@ -167,13 +160,13 @@ public class MinioS3Repository implements S3Repository{
                 }
             }
             return response;
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             log.error("Error getting info of files in directory with path {}", path);
             throw new RuntimeException();
         }
     }
 
+    /*
     @Override
     public void move(String from, String to) {
     }
@@ -187,10 +180,11 @@ public class MinioS3Repository implements S3Repository{
     public void createDirectory() {
 
     }
+     */
 
-    private ResourceInfoResponse objectToResourceInfoResponse(GetObjectResponse stream){
+    private ResourceInfoResponse objectToResourceInfoResponse(GetObjectResponse stream) {
         var splitedPath = stream.object().split("/");
-        var fileName = splitedPath[splitedPath.length-1];
+        var fileName = splitedPath[splitedPath.length - 1];
         var strBuilder = new StringBuilder(stream.object());
         var path = strBuilder.delete(strBuilder.lastIndexOf(fileName), stream.object().length()).toString();
         return new ResourceInfoResponse(

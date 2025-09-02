@@ -16,12 +16,12 @@ public interface S3Repository {
 
     ResourceInfoResponse getInfo(String path);
 
-    void move(String from, String to);
+//    void move(String from, String to);
 
-    Set<ResourceInfoResponse> search(String query);
+//    Set<ResourceInfoResponse> search(String query);
 
     Set<ResourceInfoResponse> getDirectoryResources(String path);
-    
-    void createDirectory();
+
+//    void createDirectory();
 
 }
