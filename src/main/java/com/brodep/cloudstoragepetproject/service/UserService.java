@@ -14,19 +14,16 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public boolean existsByUserName(String username){
+    public boolean existsByUserName(String username) {
         return userRepository.existsByUsername(username);
     }
 
-    public User save (User user){
+    public User save(User user) {
         return userRepository.save(user);
     }
 
-    public User findByUsername(String username){
-        return userRepository.findByUsername(username)
-                .orElseThrow(()->new ResourceNotFoundException(
-                        "User with username %s not found".formatted(username)
-                ));
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("User with username %s not found".formatted(username)));
     }
 
     public UserDetailsService userDetailsService() {

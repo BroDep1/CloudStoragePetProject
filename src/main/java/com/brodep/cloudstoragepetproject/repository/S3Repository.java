@@ -3,11 +3,12 @@ package com.brodep.cloudstoragepetproject.repository;
 import com.brodep.cloudstoragepetproject.dto.response.ResourceInfoResponse;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Set;
 
 public interface S3Repository {
 
-    void upload(String path, MultipartFile file);
+    Set<ResourceInfoResponse> upload(String path, List<MultipartFile> files);
 
     void delete(String path);
 

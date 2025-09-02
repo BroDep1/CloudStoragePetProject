@@ -46,10 +46,10 @@ public class GlobalExceptionHandler{
         return new AppError(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
     }
 
-    @ExceptionHandler(UsernameIsUnavailableException.class)
+    @ExceptionHandler(AlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     @ResponseBody
-    public AppError handleUsernameIsUnavailableException(UsernameIsUnavailableException e) {
+    public AppError handleAlreadyExistsException(AlreadyExistsException e) {
         log.error(e.getMessage(), e);
         return new AppError(HttpStatus.CONFLICT.value(), e.getMessage());
     }

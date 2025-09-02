@@ -11,11 +11,12 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
 @RequestMapping("api")
-@Tag(name = "Ресурсы")
+@Tag(name = "Сервис управления данными S3 хранилища")
 @RequiredArgsConstructor
 public class ResourceController {
 
@@ -60,8 +61,8 @@ public class ResourceController {
     @Operation(summary = "Аплоад ресурсов")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(value = "resource", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Set<ResourceInfoResponse> uploadResources(@RequestParam(required = false) String path, @RequestParam("object") MultipartFile file) {
-        return resourceService.uploadResources(path, file);
+    public Set<ResourceInfoResponse> uploadResources(@RequestParam(required = false) String path, @RequestParam("object") List<MultipartFile> files) {
+        return resourceService.uploadResources(path, files);
     }
 
     @Operation(summary = "Получение информации о содержимом папки")

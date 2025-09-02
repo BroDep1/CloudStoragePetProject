@@ -2,7 +2,7 @@ package com.brodep.cloudstoragepetproject.service;
 
 import com.brodep.cloudstoragepetproject.dto.request.UserRequest;
 import com.brodep.cloudstoragepetproject.dto.response.UserResponse;
-import com.brodep.cloudstoragepetproject.exeption.UsernameIsUnavailableException;
+import com.brodep.cloudstoragepetproject.exeption.AlreadyExistsException;
 import com.brodep.cloudstoragepetproject.exeption.ValidationException;
 import com.brodep.cloudstoragepetproject.mapper.UserMapper;
 import jakarta.servlet.ServletException;
@@ -32,7 +32,7 @@ public class AuthService {
         log.info("Пользователь {} начал регистрацию", userRequest.username());
         if (userService.existsByUserName(userRequest.username())) {
             log.error("Пользователь {} неуспешно завершил регистрацию: юзернейм недоступен", userRequest.username());
-            throw new UsernameIsUnavailableException("Username %s is unavailable"
+            throw new AlreadyExistsException("Username %s is unavailable"
                     .formatted(userRequest.username()));
         }
         if (userRequest.username().length() < 3) {

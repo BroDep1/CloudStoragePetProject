@@ -1,6 +1,7 @@
 package com.brodep.cloudstoragepetproject.repository;
 
 import com.brodep.cloudstoragepetproject.dto.response.ResourceInfoResponse;
+import com.brodep.cloudstoragepetproject.exeption.AlreadyExistsException;
 import io.minio.*;
 import io.minio.messages.Item;
 import jakarta.annotation.PostConstruct;
@@ -9,10 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 @Slf4j
@@ -31,10 +35,15 @@ public class MinioS3Repository implements S3Repository{
 
     @PostConstruct
     public void init() {
-        minioClient = MinioClient.builder()
-                .endpoint(host)
-                .credentials(username, password)
-                .build();
+        try {
+            minioClient = MinioClient.builder()
+                    .endpoint(host)
+                    .credentials(username, password)
+                    .build();
+        }
+        catch (Exception e) {
+            log.error("Error connecting to minio");
+        }
         try {
             var bucketExists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!bucketExists) {
@@ -48,15 +57,34 @@ public class MinioS3Repository implements S3Repository{
 
     @SneakyThrows
     @Override
-    public void upload(String path, MultipartFile file) {
-        minioClient.putObject(
-                PutObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(path + file.getOriginalFilename())
-                        .stream(file.getInputStream(), file.getSize(), -1)
-                        .contentType(file.getContentType())
-                        .build()
-        );
+    public Set<ResourceInfoResponse> upload(String path, List<MultipartFile> files) {
+        Set<ResourceInfoResponse> response = new CopyOnWriteArraySet<>();
+        try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (MultipartFile file : files) {
+                executorService.submit(() -> {
+                    try {
+                        minioClient.putObject(
+                                PutObjectArgs.builder()
+                                        .bucket(bucketName)
+                                        .object(path + file.getOriginalFilename())
+                                        .stream(file.getInputStream(), file.getSize(), -1)
+                                        .contentType(file.getContentType())
+                                        .build()
+                        );
+                        var stream = minioClient.getObject(
+                                GetObjectArgs.builder()
+                                        .bucket(bucketName)
+                                        .object(path)
+                                        .build());
+                        response.add(objectToResourceInfoResponse(stream));
+                    }
+                    catch (Exception e){
+                        throw new AlreadyExistsException("Файл с именем %s уже существует".formatted(file.getName()));
+                    }
+                });
+            }
+        }
+        return response;
     }
 
     @SneakyThrows
@@ -100,16 +128,6 @@ public class MinioS3Repository implements S3Repository{
         return objectToResourceInfoResponse(stream);
     }
 
-    @Override
-    public void move(String from, String to) {
-
-    }
-
-    @Override
-    public Set<ResourceInfoResponse> search(String query) {
-        return Set.of();
-    }
-
     @SneakyThrows
     @Override
     public Set<ResourceInfoResponse> getDirectoryResources(String path) {
@@ -133,6 +151,15 @@ public class MinioS3Repository implements S3Repository{
             }
         }
         return response;
+    }
+
+    @Override
+    public void move(String from, String to) {
+    }
+
+    @Override
+    public Set<ResourceInfoResponse> search(String query) {
+        return Set.of();
     }
 
     @Override

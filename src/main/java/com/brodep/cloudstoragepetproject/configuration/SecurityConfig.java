@@ -17,8 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisIndexedHttpSession;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import java.util.List;
 
 @Configuration
@@ -37,9 +35,7 @@ public class SecurityConfig {
                     CorsConfiguration configuration = new CorsConfiguration();
                     configuration.setAllowedOrigins(List.of(
                             "http://localhost",
-                            "http://localhost:3000",
-                            "http://localhost:80",
-                            "http://localhost:5173"
+                            "http://localhost:80"
                     ));
                     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     configuration.setAllowedHeaders(List.of("*"));
@@ -51,7 +47,12 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/swagger-resources/*", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .sessionManagement(
+                        httpSecuritySessionManagementConfigurer -> {
+                            httpSecuritySessionManagementConfigurer.sessionFixation().migrateSession();
+                            httpSecuritySessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
+                        }
+                )
                 .authenticationProvider(authenticationProvider())
                 .logout(AbstractHttpConfigurer::disable);
         return http.build();
