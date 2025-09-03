@@ -15,7 +15,7 @@ java {
 }
 
 bootBuildImage {
-    imageName = "abrodep/cloud-storage-backend:latest"
+    imageName = "abrodep/api-gateway-service:latest"
 }
 
 

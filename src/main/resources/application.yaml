@@ -4,8 +4,8 @@ spring:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/postgres}
-    username: postgres
-    password: postgres
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -23,5 +23,5 @@ s3:
   host: ${SPRING_MINIO_HOST:http://127.0.0.1:9000}
   bucket-name: user-files
   credentials:
-    username: user
-    password: user123456
+    username: ${MINIO_ROOT_USER}
+    password: ${MINIO_ROOT_PASSWORD}

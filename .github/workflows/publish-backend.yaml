@@ -25,4 +25,4 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-          docker push abrodep/cloud-storage-backend:latest
+          docker push abrodep/api-gateway-service:latest

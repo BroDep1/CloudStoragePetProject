@@ -1,30 +1,59 @@
 services:
-  db:
-    container_name: db
+  api-gateway-service-db:
+    container_name: api-gateway-service-db
     image: postgres:17
     restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     networks:
       - app-net
-  backend:
-    container_name: backend
-    image: abrodep/cloud-storage-backend:latest
+  statistics-service-db:
+    container_name: statistics-service-db
+    image: postgres:17
+    restart: unless-stopped
+    ports:
+      - "5433:5433"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - app-net
+  api-gateway-service:
+    container_name: api-gateway-service
+    image: abrodep/api-gateway-service:latest
     pull_policy: always
     ports:
       - '8080:8080'
     depends_on:
-      db:
-        condition: service_started
-      redis:
-        condition: service_started
+      - api-gateway-service-db
+      - redis
+      - minio
+      - kafka-broker
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://api-gateway-service-db:5432/postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_REDIS_HOST: redis
       SPRING_MINIO_HOST: http://minio:9000
+      MINIO_ROOT_USER: ${POSTGRES_USER}
+      MINIO_ROOT_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - app-net
+  statistics-service:
+    container_name: statistics-service
+    image: abrodep/statistics-service:latest
+    pull_policy: always
+    ports:
+      - '8081:8081'
+    depends_on:
+      - statistics-service-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://statistics-service-db:5433/postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     networks:
       - app-net
   redis:
@@ -44,10 +73,26 @@ services:
       - '9001:9001'
     command: server /data --console-address ":9001"
     environment:
-        MINIO_ROOT_USER: user
-        MINIO_ROOT_PASSWORD: user123456
+        MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+        MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     networks:
       - app-net
+  kafka-broker:
+    image: apache/kafka:latest
+    container_name: kafka-broker
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 1
   frontend:
     container_name: frontend
     build: frontend/cloud-storage-frontend/.
@@ -56,6 +101,11 @@ services:
     restart: unless-stopped
     networks:
       - app-net
+    depends_on:
+      api-gateway-service:
+        condition: service_started
+      statistics-service:
+        condition: service_started
 
 networks:
   app-net:
